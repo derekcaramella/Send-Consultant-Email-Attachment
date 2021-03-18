@@ -12,7 +12,7 @@ from email.mime.text import MIMEText
 
 con = pyodbc.connect(Trusted_Connection='no',
                      driver='{SQL Server}',
-                     server='192.168.15.32',
+                     server=settings.database_ip,
                      database='Alpha_Live',
                      UID=settings.database_id,
                      PWD=settings.database_password)
