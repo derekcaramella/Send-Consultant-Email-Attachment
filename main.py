@@ -14,7 +14,7 @@ con = pyodbc.connect(Trusted_Connection='no',
                      driver='{SQL Server}',
                      server='192.168.15.32',
                      database='Alpha_Live',
-                     UID=settings.database_username,
+                     UID=settings.database_id,
                      PWD=settings.database_password)
 cursor = con.cursor()
 sn_bagger_df = pd.read_sql('SELECT * FROM [Alpha_Live].[dbo].[SN Bagger]', con)
