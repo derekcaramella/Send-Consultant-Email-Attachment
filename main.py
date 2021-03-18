@@ -2,6 +2,7 @@ import pyodbc
 import pandas as pd
 import pyjokes
 from datetime import datetime
+import settings
 import smtplib
 import ssl
 from email import encoders
@@ -13,15 +14,15 @@ con = pyodbc.connect(Trusted_Connection='no',
                      driver='{SQL Server}',
                      server='192.168.15.32',
                      database='Alpha_Live',
-                     UID='pladis_dba',
-                     PWD='BigFlats')
+                     UID=settings.database_username,
+                     PWD=settings.database_password)
 cursor = con.cursor()
 sn_bagger_df = pd.read_sql('SELECT * FROM [Alpha_Live].[dbo].[SN Bagger]', con)
 sn_bagger_df.to_excel('Updated SN Data.xlsx', sheet_name='SN Bagger', index=False)
 
 
 sender_email = 'derekcaramella@gmail.com'
-sender_password = 'jcmc7%ru'
+sender_password = settings.email_password
 receiver_email = 'tenderby@amt-mep.org'
 subject = 'SN Update| ' + datetime.strftime(datetime.now(), '%m/%d/%Y %H:%M')
 body = 'Hi Tom, attached is the updated SN data.\n' + str(pyjokes.get_joke()) + '\n\nBest Regards,\nDerek Caramella'
