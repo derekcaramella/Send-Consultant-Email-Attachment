@@ -1,4 +1,5 @@
 import pyodbc
+import os
 import pandas as pd
 import pyjokes
 from datetime import datetime
@@ -9,6 +10,9 @@ from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+
+if os.path.exists('Updated SN Data.xlsx'):
+    os.remove('Updated SN Data.xlsx')
 
 con = pyodbc.connect(Trusted_Connection='no',
                      driver='{SQL Server}',
