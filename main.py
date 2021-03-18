@@ -11,9 +11,7 @@ from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-if os.path.exists('Updated SN Data.xlsx'):
-    os.remove('Updated SN Data.xlsx')
-
+os.chdir(r'C:\Users\carmelld\OneDrive - Yildiz Holding\Documents\Send Consultant Email Attachment')
 con = pyodbc.connect(Trusted_Connection='no',
                      driver='{SQL Server}',
                      server=settings.database_ip,
@@ -22,15 +20,13 @@ con = pyodbc.connect(Trusted_Connection='no',
                      PWD=settings.database_password)
 cursor = con.cursor()
 sn_bagger_df = pd.read_sql('SELECT * FROM [Alpha_Live].[dbo].[SN Bagger]', con)
-sn_bagger_df.to_excel('Updated SN Data.xlsx', sheet_name='SN Bagger', index=False)
-
+sn_bagger_df.to_excel('Updated SN Data.xlsx', index=False)
 
 sender_email = 'derekcaramella@gmail.com'
 sender_password = settings.email_password
 receiver_email = 'tenderby@amt-mep.org'
 subject = 'SN Update| ' + datetime.strftime(datetime.now(), '%m/%d/%Y %H:%M')
 body = 'Hi Tom, attached is the updated SN data.\n' + str(pyjokes.get_joke()) + '\n\nBest Regards,\nDerek Caramella'
-
 
 message = MIMEMultipart('alternative')
 message['Subject'] = subject
@@ -42,7 +38,7 @@ attachment = open(attachment_file_path, 'rb')
 part = MIMEBase('application', 'octet-stream')
 part.set_payload(attachment.read())
 encoders.encode_base64(part)
-part.add_header('Content-Disposition', f'attachment; filename= {attachment_file_path}',)
+part.add_header('Content-Disposition', f'attachment; filename= {attachment_file_path}', )
 message.attach(part)
 text = message.as_string()
 
