@@ -2,6 +2,7 @@
 import pyodbc
 import os
 import pandas as pd
+import openpyxl
 import pyjokes
 from datetime import datetime
 import settings
@@ -11,6 +12,93 @@ from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+
+os.chdir(r'Q:\Production Paperless Project\Daily Paperwork Archive\2021\SN Packaging\April')
+sn_throughput_list = []
+for file in os.listdir():
+    if ('.xlsm' in file) and ('~$' not in file):
+        stamp = datetime.strptime(file[:16], '%Y-%m-%d %H-%M')
+        if stamp > datetime(2021, 4, 25, 18, 0):
+            workbook = openpyxl.load_workbook(file, read_only=True, data_only=True)
+            worksheet = workbook['Throughput']
+            date = file[:10]
+            shift = worksheet['C2'].value
+            workstation = 'SN'
+            operator = worksheet['C3'].value
+            sku = worksheet['A6'].value
+
+            for row in range(13, 25):
+                row_index = row
+                shift_hour = row - 12
+                # Screening expected number values.
+                headcount = worksheet['B' + str(row)].value
+                if not isinstance(headcount, (int, float)):
+                    headcount = 0
+
+                total_pouches_to_station_1 = worksheet['C' + str(row)].value
+                if not isinstance(total_pouches_to_station_1, (int, float)):
+                    total_pouches_to_station_1 = 0
+
+                total_filled_pouches_to_station_8 = worksheet['D' + str(row)].value
+                if not isinstance(total_filled_pouches_to_station_8, (int, float)):
+                    total_filled_pouches_to_station_8 = 0
+
+                hourly_cases_produced = worksheet['F' + str(row)].value
+                if not isinstance(hourly_cases_produced, (int, float)):
+                    hourly_cases_produced = 0
+
+                hourly_pounds_produced = worksheet['G' + str(row)].value
+                if not isinstance(hourly_pounds_produced, (int, float)):
+                    hourly_pounds_produced = 0
+
+                machine_speed = worksheet['I' + str(row)].value
+                if not isinstance(machine_speed, (int, float)):
+                    machine_speed = 0
+
+                hourly_scrap = worksheet['J' + str(row)].value
+                if not isinstance(hourly_scrap, (int, float)):
+                    hourly_scrap = 0
+
+                bag_loss = worksheet['K' + str(row)].value
+                if not isinstance(bag_loss, (int, float)):
+                    bag_loss = 0
+
+                downtime_minutes = worksheet['L' + str(row)].value
+                if not isinstance(downtime_minutes, (int, float)):
+                    downtime_minutes = 0
+
+                downtime_reason = worksheet['M' + str(row)].value
+                comments = str(worksheet['N' + str(row)].value)
+                comments = comments.replace('"', '').replace("'", "") if comments is not None else comments
+
+                oee = worksheet['O' + str(row)].value
+                if not isinstance(oee, (int, float)):
+                    oee = 0
+
+                availability = worksheet['P' + str(row)].value
+                if not isinstance(availability, (int, float)):
+                    availability = 0
+
+                performance = worksheet['Q' + str(row)].value
+                if not isinstance(performance, (int, float)):
+                    performance = 0
+
+                waste = worksheet['R' + str(row)].value
+                if not isinstance(waste, (int, float)):
+                    waste = 0
+                instance_tuple = (
+                    date, shift, workstation, operator, sku, shift_hour, headcount, total_pouches_to_station_1,
+                    total_filled_pouches_to_station_8, hourly_cases_produced, hourly_pounds_produced,
+                    machine_speed, hourly_scrap, bag_loss, downtime_minutes, downtime_reason, comments,
+                    oee, availability, performance, waste)
+                sn_throughput_list.append(instance_tuple)
+sn_throughput_df = pd.DataFrame(sn_throughput_list, columns=['Date', 'Shift', 'Workstation', 'Operator', 'SKU',
+                                                             'Shift Hour', 'Headcount', 'Total Pouches to Station 1',
+                                                             'Total Filled Pouches to Station 8',
+                                                             'Hourly Cases Produced', 'Hourly Pounds Produced',
+                                                             'Machine Speed (Bags/Min.)', 'Hourly Scrap (Pounds)',
+                                                             'Bag Loss', 'Downtime (Minutes)', 'Downtime Reason',
+                                                             'Comments', 'OEE', 'Availability', 'Performance', 'Waste'])
 
 os.chdir(r'C:\Users\carmelld\OneDrive - Yildiz Holding\Documents\Send Consultant Email Attachment')  # Switch directory
 # Connect to database
@@ -38,7 +126,7 @@ sn_bagger_df = pd.read_sql('SELECT * FROM [Alpha_Live].[dbo].[SN Bagger]', con) 
 dataframes_dic = {'Kitchen': chocotech_kitchen_df, 'KGM 080': kgm_080_df, 'TTB 015': ttb_015_df, 'M5 090': m5_090_df,
                   'TT 100': tt_100_df, 'M5 140': m5_140_df, 'TT 150': tt_150_df, 'DBS 080': dbs_080_df,
                   'DFR 031': dfr_031_df, 'HCM 273': hcm_273_df, 'HCM 274': hcm_274_df, 'TTM 147': ttm_147_df,
-                  'SN': sn_bagger_df}  # Dictionary that enable sheet naming
+                  'SN': sn_bagger_df, 'SN Throughput': sn_throughput_df}  # Dictionary that enable sheet naming
 excel_writer = pd.ExcelWriter('Updated Site Data.xlsx', engine='xlsxwriter')  # Creates Excel Writer
 for dataframe in dataframes_dic:  # dataframe is the string, use the dictionary to obtain the dataframe object
     dataframes_dic[dataframe].to_excel(excel_writer, sheet_name=dataframe, index=False)
@@ -57,7 +145,7 @@ message['Subject'] = subject  # Add predefined subject line
 message['From'] = sender_email  # Add predefined sender's address
 message['To'] = receiver_email  # # Add predefined receiver's address
 message.attach(MIMEText(body, 'plain'))  # Add predefined body as plain text
-attachment_file_path = 'Updated SN Data.xlsx'  # Saved Excel file path from previous SQL query
+attachment_file_path = 'Updated Site Data.xlsx'  # Saved Excel file path from previous SQL query
 attachment = open(attachment_file_path, 'rb')  # Open the attachment with reading binary parameter
 part = MIMEBase('application', 'octet-stream')  # Circle back later
 part.set_payload(attachment.read())  # Circle back later
