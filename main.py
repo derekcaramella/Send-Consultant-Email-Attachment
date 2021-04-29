@@ -18,7 +18,7 @@ sn_throughput_list = []
 for file in os.listdir():
     if ('.xlsm' in file) and ('~$' not in file):
         stamp = datetime.strptime(file[:16], '%Y-%m-%d %H-%M')
-        if stamp > datetime(2021, 4, 25, 18, 0):
+        if stamp > datetime(2021, 4, 26, 18, 0):
             workbook = openpyxl.load_workbook(file, read_only=True, data_only=True)
             worksheet = workbook['Throughput']
             date = file[:10]
@@ -97,8 +97,9 @@ sn_throughput_df = pd.DataFrame(sn_throughput_list, columns=['Date', 'Shift', 'W
                                                              'Total Filled Pouches to Station 8',
                                                              'Hourly Cases Produced', 'Hourly Pounds Produced',
                                                              'Machine Speed (Bags/Min.)', 'Hourly Scrap (Pounds)',
-                                                             'Bag Loss', 'Downtime (Minutes)', 'Downtime Reason',
-                                                             'Comments', 'OEE', 'Availability', 'Performance', 'Waste'])
+                                                             'Production Efficiency (Percentage)', 'Downtime (Minutes)',
+                                                             'Downtime Reason', 'Comments', 'OEE', 'Availability',
+                                                             'Performance', 'Waste'])
 
 os.chdir(r'C:\Users\carmelld\OneDrive - Yildiz Holding\Documents\Send Consultant Email Attachment')  # Switch directory
 # Connect to database
